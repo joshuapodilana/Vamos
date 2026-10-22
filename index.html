@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>StudentOS | Interactive Portfolio</title>
+  <!-- FontAwesome & Google Fonts -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+  <style>
+    /* ==========================================================================
+       STUDENTOS DESIGN SYSTEM & STYLESHEET
+       ========================================================================== */
+    :root {
+      --bg-main: #0b0f19;
+      --bg-card: rgba(22, 28, 45, 0.75);
+      --bg-card-border: rgba(255, 255, 255, 0.12);
+      --text-main: #f1f5f9;
+      --text-muted: #94a3b8;
+      --accent-primary: #6366f1;
+      --accent-primary-hover: #4f46e5;
+      --accent-glow: rgba(99, 102, 241, 0.35);
+      --accent-green: #10b981;
+      --accent-pink: #ec4899;
+      --accent-yellow: #f59e0b;
+      --radius-lg: 20px;
+      --radius-md: 12px;
+      --radius-sm: 8px;
+      --font-body: 'Plus Jakarta Sans', sans-serif;
+      --font-code: 'Fira Code', monospace;
+      --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    body.light-mode {
+      --bg-main: #f8fafc;
+      --bg-card: rgba(255, 255, 255, 0.85);
+      --bg-card-border: rgba(0, 0, 0, 0.08);
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --accent-glow: rgba(99, 102, 241, 0.15);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--font-body);
+      background-color: var(--bg-main);
+      color: var(--text-main);
+      min-height: 100vh;
+      line-height: 1.6;
+      overflow-x: hidden;
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    .bg-mesh {
+      position: fixed;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      background: 
+        radial-gradient(circle at 15% 20%, rgba(99, 102, 241, 0.15) 0%, transparent 45%),
+        radial-gradient(circle at 85% 80%, rgba(236, 72, 153, 0.12) 0%, transparent 45%);
+      z-index: -1;
+      pointer-events: none;
+    }
+
+    .glass-panel {
+      background: var(--bg-card);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--bg-card-border);
+      border-radius: var(--radius-lg);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    }
+
+    .top-nav {
+      position: sticky; top: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 24px;
+      background: rgba(11, 15, 25, 0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--bg-card-border);
+    }
+
+    .brand { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 1.2rem; }
+    .status-dot { width: 10px; height: 10px; background-color: var(--accent-green); border-radius: 50%; box-shadow: 0 0 10px var(--accent-green); animation: pulse 2s infinite; }
+    @keyframes pulse { 0% { transform: scale(0.95); opacity: 0.8; } 50% { transform: scale(1.1); opacity: 1; } 100% { transform: scale(0.95); opacity: 0.8; } }
+    .brand-text small { font-size: 0.75rem; color: var(--accent-primary); background: rgba(99, 102, 241, 0.15); padding: 2px 6px; border-radius: 4px; }
+
+    .timer-card {
+      width: 320px; background: rgba(255, 255, 255, 0.05);
+      padding: 8px 14px; border-radius: var(--radius-md); border: 1px solid var(--bg-card-border);
+      transition: var(--transition);
+    }
+    .timer-card.completed { border-color: var(--accent-green); box-shadow: 0 0 15px rgba(16, 185, 129, 0.3); }
+    .timer-header { display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 4px; font-weight: 600; }
+    .timer-countdown { color: var(--accent-pink); font-family: var(--font-code); }
+    .progress-track { width: 100%; height: 6px; background: rgba(255, 255, 255, 0.1); border-radius: 3px; overflow: hidden; }
+    .progress-fill { width: 0%; height: 100%; background: linear-gradient(90deg, var(--accent-primary), var(--accent-pink)); border-radius: 3px; transition: width 0.1s linear; }
+
+    .top-actions { display: flex; gap: 10px; }
+    .btn-primary { background: var(--accent-primary); color: white; border: none; padding: 8px 16px; border-radius: var(--radius-sm); font-weight: 600; font-size: 0.9rem; cursor: pointer; transition: var(--transition); display: inline-flex; align-items: center; gap: 6px; }
+    .btn-primary:hover { background: var(--accent-primary-hover); box-shadow: 0 0 15px var(--accent-glow); transform: translateY(-1px); }
+    .btn-sm { padding: 6px 12px; font-size: 0.8rem; border-radius: var(--radius-sm); border: none; background: var(--accent-primary); color: white; cursor: pointer; transition: var(--transition); }
+    .btn-sm:hover { opacity: 0.9; }
+    .btn-outline { background: transparent; border: 1px solid var(--bg-card-border); color: var(--text-main); }
+    .btn-outline:hover { background: rgba(255, 255, 255, 0.05); }
+    .icon-btn { background: transparent; border: 1px solid var(--bg-card-border); color: var(--text-main); width: 36px; height: 36px; border-radius: var(--radius-sm); cursor: pointer; transition: var(--transition); display: flex; align-items: center; justify-content: center; }
+    .icon-btn:hover { background: rgba(255, 255, 255, 0.1); }
+
+    .workspace-container { max-width: 1200px; margin: 30px auto; padding: 0 20px; display: flex; flex-direction: column; gap: 30px; }
+    .hero-grid { display: grid; grid-template-columns: 360px 1fr; gap: 30px; align-items: center; }
+
+    .id-card-wrapper { perspective: 1000px; }
+    .id-card {
+      position: relative; background: linear-gradient(135deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.95));
+      border: 1px solid rgba(255, 255, 255, 0.15); border-radius: var(--radius-lg); padding: 24px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3); transform-style: preserve-3d; transition: transform 0.1s ease-out;
+    }
+    .card-top { display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; font-weight: 700; color: var(--accent-primary); margin-bottom: 20px; }
+    .card-body { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 15px; }
+    .avatar-container { position: relative; width: 110px; height: 110px; }
+    .avatar-container img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 3px solid var(--accent-primary); box-shadow: 0 0 20px var(--accent-glow); }
+    .avatar-badge { position: absolute; bottom: 0; right: 4px; background: var(--accent-green); color: white; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; border: 2px solid var(--bg-main); }
+    .student-info h2 { font-size: 1.4rem; margin-bottom: 4px; }
+    .degree-tag { color: var(--text-muted); font-size: 0.85rem; margin-bottom: 12px; }
+    .meta-list { display: flex; flex-direction: column; gap: 4px; font-size: 0.8rem; background: rgba(0, 0, 0, 0.2); padding: 8px 14px; border-radius: var(--radius-sm); width: 100%; }
+    .card-footer { margin-top: 20px; padding-top: 15px; border-top: 1px dashed rgba(255, 255, 255, 0.1); display: flex; justify-content: space-between; align-items: center; font-family: var(--font-code); font-size: 0.7rem; color: var(--text-muted); }
+    .verify-badge { color: var(--accent-green); font-weight: 600; }
+
+    .intro-card { padding: 32px; display: flex; flex-direction: column; gap: 16px; }
+    .pill-badge { display: inline-flex; align-items: center; gap: 6px; background: rgba(245, 158, 11, 0.15); color: var(--accent-yellow); padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; width: fit-content; }
+    .bio-text { color: var(--text-muted); font-size: 1.05rem; }
+
+    .coffee-widget { display: flex; align-items: center; gap: 20px; background: rgba(0, 0, 0, 0.2); padding: 16px; border-radius: var(--radius-md); margin: 10px 0; }
+    .cup { position: relative; width: 44px; height: 48px; background: #e2e8f0; border-radius: 0 0 16px 16px; border-top: 3px solid #cbd5e1; }
+    .cup::after { content: ''; position: absolute; right: -12px; top: 10px; width: 12px; height: 20px; border: 3px solid #e2e8f0; border-left: none; border-radius: 0 8px 8px 0; }
+    .liquid { position: absolute; bottom: 0; width: 100%; height: 85%; background: #78350f; border-radius: 0 0 13px 13px; transition: height 0.3s ease; }
+    .steam-container { position: absolute; top: -20px; left: 10px; display: flex; gap: 6px; }
+    .steam { width: 4px; height: 14px; background: rgba(255, 255, 255, 0.4); border-radius: 2px; animation: steamRise 1.8s infinite ease-out; }
+    .steam2 { animation-delay: 0.4s; }
+    .steam3 { animation-delay: 0.8s; }
+    @keyframes steamRise { 0% { transform: translateY(0) scaleX(1); opacity: 0; } 50% { opacity: 0.8; } 100% { transform: translateY(-12px) scaleX(1.5); opacity: 0; } }
+    .caffeine-level { display: flex; align-items: center; gap: 12px; font-size: 0.85rem; }
+
+    .hero-cta-buttons { display: flex; gap: 12px; margin-top: 5px; }
+    .btn-primary-sm { background: var(--accent-primary); color: white; text-decoration: none; padding: 8px 16px; border-radius: var(--radius-sm); font-size: 0.85rem; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; }
+    .btn-secondary-sm { background: transparent; border: 1px solid var(--bg-card-border); color: var(--text-main); padding: 8px 16px; border-radius: var(--radius-sm); font-size: 0.85rem; font-weight: 600; cursor: pointer; }
+
+    .content-tabs-section { padding: 24px; }
+    .tab-buttons { display: flex; gap: 10px; border-bottom: 1px solid var(--bg-card-border); padding-bottom: 16px; margin-bottom: 20px; overflow-x: auto; }
+    .tab-btn { background: transparent; border: none; color: var(--text-muted); padding: 10px 18px; border-radius: var(--radius-sm); cursor: pointer; font-weight: 600; font-size: 0.9rem; transition: var(--transition); display: flex; align-items: center; gap: 8px; white-space: nowrap; }
+    .tab-btn:hover { color: var(--text-main); background: rgba(255, 255, 255, 0.05); }
+    .tab-btn.active { color: white; background: var(--accent-primary); }
+    .tab-pane { display: none; }
+    .tab-pane.active { display: block; }
+    .pane-header { margin-bottom: 20px; }
+    .pane-header h3 { font-size: 1.2rem; }
+    .pane-header p { color: var(--text-muted); font-size: 0.85rem; }
+
+    .skills-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; }
+    .skill-card { background: rgba(0, 0, 0, 0.2); border: 1px solid var(--bg-card-border); padding: 16px; border-radius: var(--radius-md); display: flex; align-items: center; gap: 12px; font-weight: 600; font-size: 0.95rem; transition: var(--transition); }
+    .skill-card:hover { transform: translateY(-3px); border-color: var(--accent-primary); }
+    .skill-card i { font-size: 1.4rem; color: var(--accent-primary); }
+
+    .hobbies-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; }
+    .hobby-card { background: rgba(0, 0, 0, 0.2); border: 1px solid var(--bg-card-border); padding: 20px; border-radius: var(--radius-md); text-align: center; transition: var(--transition); }
+    .hobby-card:hover { transform: translateY(-3px); border-color: var(--accent-pink); }
+    .hobby-card i { font-size: 2rem; color: var(--accent-pink); margin-bottom: 10px; }
+
+    .terminal-window { background: #090d16; border-radius: var(--radius-md); border: 1px solid rgba(255, 255, 255, 0.1); overflow: hidden; font-family: var(--font-code); }
+    .terminal-bar { background: #111827; padding: 10px 14px; display: flex; align-items: center; gap: 8px; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; }
+    .dot.red { background: #ef4444; } .dot.yellow { background: #f59e0b; } .dot.green { background: #10b981; }
+    .term-title { margin-left: 10px; font-size: 0.75rem; color: var(--text-muted); }
+    .terminal-body { padding: 16px; height: 200px; overflow-y: auto; font-size: 0.85rem; display: flex; flex-direction: column; gap: 8px; }
+    .terminal-input-row { display: flex; align-items: center; padding: 10px 16px; background: #0d1322; border-top: 1px solid rgba(255, 255, 255, 0.05); }
+    .prompt { color: var(--accent-green); margin-right: 10px; font-weight: 600; }
+    .terminal-input-row input { background: transparent; border: none; outline: none; color: var(--text-main); font-family: var(--font-code); font-size: 0.85rem; width: 100%; }
+    .text-dim { color: var(--text-muted); }
+    .text-glow { color: var(--accent-primary); font-weight: 600; }
+
+    .notes-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; font-size: 0.85rem; color: var(--text-muted); }
+    .sticky-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px; }
+    .sticky-note { position: relative; padding: 20px; border-radius: 4px; color: #1e293b; font-family: 'Plus Jakarta Sans', sans-serif; box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15); transform: rotate(-1deg); transition: var(--transition); }
+    .sticky-note:nth-child(even) { transform: rotate(2deg); }
+    .sticky-note:hover { transform: scale(1.03) rotate(0deg); z-index: 10; }
+    .pin { position: absolute; top: -10px; left: 50%; transform: translateX(-50%); font-size: 1.1rem; }
+    .yellow-note { background: #fef08a; } .cyan-note { background: #a5f3fc; } .pink-note { background: #fbcfe8; }
+    .sticky-note h4 { font-size: 0.95rem; margin-bottom: 6px; }
+    .sticky-note p { font-size: 0.8rem; line-height: 1.4; }
+
+    .lab-section { padding: 28px; }
+    .lab-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .lab-header h2 { font-size: 1.3rem; }
+    .lab-header p { font-size: 0.85rem; color: var(--text-muted); }
+    .game-arena { position: relative; width: 100%; height: 260px; background: rgba(0, 0, 0, 0.3); border: 2px dashed var(--bg-card-border); border-radius: var(--radius-md); overflow: hidden; display: flex; align-items: center; justify-content: center; }
+    .game-instructions { text-align: center; color: var(--text-muted); display: flex; flex-direction: column; align-items: center; gap: 10px; }
+    .game-target { position: absolute; width: 44px; height: 44px; background: var(--accent-pink); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 0 15px var(--accent-pink); transition: transform 0.1s ease; user-select: none; }
+    .game-target:active { transform: scale(0.85); }
+    .game-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 20px; }
+    .stat-box { background: rgba(0, 0, 0, 0.2); padding: 12px; border-radius: var(--radius-sm); text-align: center; border: 1px solid var(--bg-card-border); }
+    .stat-label { display: block; font-size: 0.75rem; color: var(--text-muted); }
+    .stat-value { font-size: 1.2rem; font-weight: 700; color: var(--accent-primary); }
+
+    .editor-drawer { position: fixed; top: 0; right: -420px; width: 380px; height: 100vh; background: var(--bg-main); border-left: 1px solid var(--bg-card-border); z-index: 1000; transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1); display: flex; flex-direction: column; box-shadow: -10px 0 30px rgba(0, 0, 0, 0.5); }
+    .editor-drawer.open { right: 0; }
+    .drawer-header { padding: 20px; border-bottom: 1px solid var(--bg-card-border); display: flex; justify-content: space-between; align-items: center; }
+    .close-btn { background: transparent; border: none; color: var(--text-muted); font-size: 1.2rem; cursor: pointer; }
+    .drawer-body { padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 16px; }
+    .help-text { font-size: 0.8rem; color: var(--text-muted); }
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    .form-group label { font-size: 0.8rem; font-weight: 600; color: var(--text-muted); }
+    .form-group input, .form-group textarea { background: rgba(0, 0, 0, 0.2); border: 1px solid var(--bg-card-border); padding: 8px 12px; border-radius: var(--radius-sm); color: var(--text-main); font-family: var(--font-body); font-size: 0.85rem; }
+    .form-group input:focus, .form-group textarea:focus { outline: none; border-color: var(--accent-primary); }
+    .full-width { width: 100%; justify-content: center; margin-top: 10px; }
+
+    .backdrop { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(4px); z-index: 999; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; }
+    .backdrop.visible { opacity: 1; pointer-events: auto; }
+
+    @media (max-width: 900px) {
+      .hero-grid { grid-template-columns: 1fr; }
+      .timer-card { display: none; }
+    }
+  </style>
+</head>
+<body class="dark-mode">
+
+  <div class="bg-mesh"></div>
+
+  <header class="top-nav">
+    <div class="brand">
+      <span class="status-dot"></span>
+      <span class="brand-text">StudentOS <small>v2.0</small></span>
+    </div>
+
+    <div class="timer-card" id="timerCard">
+      <div class="timer-header">
+        <span><i class="fa-solid fa-stopwatch"></i> 45s Engagement Challenge</span>
+        <span id="timerText" class="timer-countdown">45s</span>
+      </div>
+      <div class="progress-track">
+        <div class="progress-fill" id="timerFill"></div>
+      </div>
+    </div>
+
+    <div class="top-actions">
+      <button class="icon-btn" id="themeToggleBtn" title="Toggle Theme"><i class="fa-solid fa-moon"></i></button>
+      <button class="btn-primary" id="openEditorBtn"><i class="fa-solid fa-pen-to-square"></i> Edit Details</button>
+    </div>
+  </header>
+
+  <main class="workspace-container">
+    <section class="hero-grid">
+      <div class="id-card-wrapper">
+        <div class="id-card" id="idCard">
+          <div class="card-glow"></div>
+          <div class="card-top">
+            <span class="univ-logo"><i class="fa-solid fa-graduation-cap"></i> UNIV OF IT</span>
+            <span class="card-chip"><i class="fa-solid fa-microchip"></i></span>
+          </div>
+          <div class="card-body">
+            <div class="avatar-container">
+              <img id="displayAvatar" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80" alt="Student Photo" />
+              <div class="avatar-badge" title="Status: Coding & Alive"><i class="fa-solid fa-bolt"></i></div>
+            </div>
+            <div class="student-info">
+              <h2 id="displayName">Alex Mercer</h2>
+              <p id="displayDegree" class="degree-tag">BS in Information Technology</p>
+              <div class="meta-list">
+                <span><i class="fa-solid fa-id-card"></i> ID: <strong id="displayId">2026-88491</strong></span>
+                <span><i class="fa-solid fa-calendar"></i> Year: <strong id="displayYear">3rd Year Senior</strong></span>
+              </div>
+            </div>
+          </div>
+          <div class="card-footer">
+            <span class="barcode">|||| | ||||| ||| ||||||| |</span>
+            <span class="verify-badge"><i class="fa-solid fa-shield-check"></i> VERIFIED</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="intro-card glass-panel">
+        <div class="pill-badge"><i class="fa-solid fa-mug-hot"></i> Fuel Status</div>
+        <h1>Welcome to my Interactive Desk!</h1>
+        <p id="displayBio" class="bio-text">
+          Hey there! I'm an IT student passionate about building clean user interfaces, playing around with code, and surviving late-night study sessions with copious amounts of coffee.
+        </p>
+
+        <div class="coffee-widget">
+          <div class="cup" id="coffeeCup">
+            <div class="steam-container">
+              <div class="steam steam1"></div>
+              <div class="steam steam2"></div>
+              <div class="steam steam3"></div>
+            </div>
+            <div class="liquid" id="coffeeLiquid"></div>
+          </div>
+          <div class="coffee-info">
+            <div class="caffeine-level">
+              <span>Caffeine Level: <strong id="caffeineVal">85%</strong></span>
+              <button class="btn-sm" id="sipBtn"><i class="fa-solid fa-mug-saucer"></i> Sip Coffee</button>
+              <button class="btn-sm btn-outline" id="refillBtn"><i class="fa-solid fa-rotate-right"></i> Refill</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="hero-cta-buttons">
+          <a href="#interactive-lab" class="btn-primary-sm"><i class="fa-solid fa-gamepad"></i> Try HCI Arcade</a>
+          <button class="btn-secondary-sm" id="lofiToggleBtn"><i class="fa-solid fa-music"></i> <span id="lofiStatus">Play Lofi Beats</span></button>
+        </div>
+      </div>
+    </section>
+
+    <section class="content-tabs-section glass-panel">
+      <nav class="tab-buttons">
+        <button class="tab-btn active" data-tab="skillsTab"><i class="fa-solid fa-code"></i> Skills & Tech</button>
+        <button class="tab-btn" data-tab="hobbiesTab"><i class="fa-solid fa-heart"></i> Hobbies & Passions</button>
+        <button class="tab-btn" data-tab="terminalTab"><i class="fa-solid fa-terminal"></i> Student CLI</button>
+        <button class="tab-btn" data-tab="notesTab"><i class="fa-solid fa-note-sticky"></i> Desk Sticky Notes</button>
+      </nav>
+
+      <div class="tab-content-area">
+        <div class="tab-pane active" id="skillsTab">
+          <div class="pane-header">
+            <h3>Technical Arsenal</h3>
+            <p>Languages, frameworks, and tools I use for projects and coursework.</p>
+          </div>
+          <div id="skillsGrid" class="skills-grid"></div>
+        </div>
+
+        <div class="tab-pane" id="hobbiesTab">
+          <div class="pane-header">
+            <h3>Life Beyond the Keyboard</h3>
+            <p>What keeps me sane when I'm not writing code or studying for exams.</p>
+          </div>
+          <div id="hobbiesGrid" class="hobbies-grid"></div>
+        </div>
+
+        <div class="tab-pane" id="terminalTab">
+          <div class="terminal-window">
+            <div class="terminal-bar">
+              <span class="dot red"></span>
+              <span class="dot yellow"></span>
+              <span class="dot green"></span>
+              <span class="term-title">student@desk:~ (zsh)</span>
+            </div>
+            <div class="terminal-body" id="termOutput">
+              <p class="term-line text-dim">StudentOS Shell v1.0. Type <span class="text-glow">'help'</span> for available commands.</p>
+            </div>
+            <div class="terminal-input-row">
+              <span class="prompt">\$</span>
+              <input type="text" id="termInput" placeholder="Try 'skills', 'hobbies', 'clear', or 'matrix'..." autocomplete="off" />
+            </div>
+          </div>
+        </div>
+
+        <div class="tab-pane" id="notesTab">
+          <div class="notes-header">
+            <p>Click on notes to flip them or add your own quick reminder!</p>
+            <button class="btn-sm" id="addNoteBtn"><i class="fa-solid fa-plus"></i> Add Sticky Note</button>
+          </div>
+          <div class="sticky-container" id="stickyContainer">
+            <div class="sticky-note yellow-note">
+              <span class="pin">📌</span>
+              <h4>CS Assignment #3</h4>
+              <p>Finish implementing Binary Search Trees before Friday midnight! Don't forget edge cases.</p>
+            </div>
+            <div class="sticky-note cyan-note">
+              <span class="pin">📌</span>
+              <h4>Exam Prep</h4>
+              <p>Review HCI Design Principles & Fitts' Law. Target index of difficulty equations.</p>
+            </div>
+            <div class="sticky-note pink-note">
+              <span class="pin">📌</span>
+              <h4>Project Idea</h4>
+              <p>Build a web application using HTML, CSS, and JS to showcase my personal student portfolio.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="lab-section glass-panel" id="interactive-lab">
+      <div class="lab-header">
+        <div>
+          <h2><i class="fa-solid fa-bullseye"></i> HCI Fitts' Law Reflex Test</h2>
+          <p>HCI Rule: Target size & distance dictate target acquisition speed. Click the target 5 times as fast as you can!</p>
+        </div>
+        <button class="btn-primary" id="startGameBtn"><i class="fa-solid fa-play"></i> Start Challenge</button>
+      </div>
+
+      <div class="game-arena" id="gameArena">
+        <div class="game-instructions" id="gameInstructions">
+          <i class="fa-solid fa-hand-pointer fa-2x"></i>
+          <p>Click "Start Challenge" to test your pointing agility!</p>
+        </div>
+        <div class="game-target" id="gameTarget" style="display: none;">
+          <i class="fa-solid fa-crosshair"></i>
+        </div>
+      </div>
+
+      <div class="game-stats" id="gameStats">
+        <div class="stat-box">
+          <span class="stat-label">Clicks Remaining</span>
+          <span class="stat-value" id="statClicks">5</span>
+        </div>
+        <div class="stat-box">
+          <span class="stat-label">Average Speed</span>
+          <span class="stat-value" id="statTime">0.00s</span>
+        </div>
+        <div class="stat-box">
+          <span class="stat-label">Accuracy Score</span>
+          <span class="stat-value" id="statScore">--</span>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <aside class="editor-drawer" id="editorDrawer">
+    <div class="drawer-header">
+      <h3><i class="fa-solid fa-sliders"></i> Customize My Info</h3>
+      <button class="close-btn" id="closeEditorBtn"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="drawer-body">
+      <p class="help-text">Update your personal details below to dynamically re-render the website!</p>
+
+      <div class="form-group">
+        <label>Full Name</label>
+        <input type="text" id="editName" value="Alex Mercer" />
+      </div>
+
+      <div class="form-group">
+        <label>Degree Program</label>
+        <input type="text" id="editDegree" value="BS in Information Technology" />
+      </div>
+
+      <div class="form-group">
+        <label>Student ID Number</label>
+        <input type="text" id="editId" value="2026-88491" />
+      </div>
+
+      <div class="form-group">
+        <label>Year Level</label>
+        <input type="text" id="editYear" value="3rd Year Senior" />
+      </div>
+
+      <div class="form-group">
+        <label>Photo Image URL</label>
+        <input type="text" id="editAvatar" value="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80" />
+      </div>
+
+      <div class="form-group">
+        <label>Bio / About Me</label>
+        <textarea id="editBio" rows="3">Hey there! I'm an IT student passionate about building clean user interfaces, playing around with code, and surviving late-night study sessions with copious amounts of coffee.</textarea>
+      </div>
+
+      <div class="form-group">
+        <label>Skills (Comma Separated)</label>
+        <input type="text" id="editSkills" value="JavaScript, Python, React, HTML5/CSS3, Git & GitHub, UI/UX Design, SQL Databases" />
+      </div>
+
+      <div class="form-group">
+        <label>Hobbies (Comma Separated)</label>
+        <input type="text" id="editHobbies" value="Casual Gaming, Lofi Music Production, Mechanical Keyboards, Late Night Biking, Digital Photography" />
+      </div>
+
+      <button class="btn-primary full-width" id="saveCustomizerBtn"><i class="fa-solid fa-check"></i> Apply & Save Changes</button>
+    </div>
+  </aside>
+
+  <div class="backdrop" id="backdrop"></div>
+
+  <script>
+    /* ==========================================================================
+       STUDENTOS INTERACTIVE LOGIC & CONTROLLERS
+       ========================================================================== */
+    const studentState = {
+      name: "Alex Mercer",
+      degree: "BS in Information Technology",
+      studentId: "2026-88491",
+      year: "3rd Year Senior",
+      avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80",
+      bio: "Hey there! I'm an IT student passionate about building clean user interfaces, playing around with code, and surviving late-night study sessions with copious amounts of coffee.",
+      skills: ["JavaScript", "Python", "React", "HTML5/CSS3", "Git & GitHub", "UI/UX Design", "SQL Databases"],
+      hobbies: ["Casual Gaming", "Lofi Music Production", "Mechanical Keyboards", "Late Night Biking", "Digital Photography"],
+      caffeine: 85
+    };
+
+    let audioCtx = null;
+
+    function playSoundEffect(type) {
+      try {
+        if (!audioCtx) {
+          audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        if (type === 'click') {
+          osc.frequency.value = 600;
+          gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.05);
+          osc.start();
+          osc.stop(audioCtx.currentTime + 0.05);
+        } else if (type === 'hit') {
+          osc.frequency.value = 880;
+          gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1);
+          osc.start();
+          osc.stop(audioCtx.currentTime + 0.1);
+        } else if (type === 'success') {
+          osc.frequency.value = 523.25;
+          gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
+          osc.start();
+          osc.stop(audioCtx.currentTime + 0.3);
+        }
+      } catch (e) {}
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      renderProfile();
+      initTimer();
+      init3DCard();
+      initTabs();
+      initCoffeeWidget();
+      initTerminal();
+      initCustomizer();
+      initThemeToggle();
+      initFittsGame();
+      initLofiSynth();
+    });
+
+    function renderProfile() {
+      document.getElementById('displayName').textContent = studentState.name;
+      document.getElementById('displayDegree').textContent = studentState.degree;
+      document.getElementById('displayId').textContent = studentState.studentId;
+      document.getElementById('displayYear').textContent = studentState.year;
+      document.getElementById('displayAvatar').src = studentState.avatar;
+      document.getElementById('displayBio').textContent = studentState.bio;
+
+      const skillsGrid = document.getElementById('skillsGrid');
+      skillsGrid.innerHTML = studentState.skills.map(skill => `
+        <div class="skill-card">
+          <i class="fa-solid fa-code"></i>
+          <span>${skill.trim()}</span>
+        </div>
+      `).join('');
+
+      const hobbiesGrid = document.getElementById('hobbiesGrid');
+      hobbiesGrid.innerHTML = studentState.hobbies.map(hobby => `
+        <div class="hobby-card">
+          <i class="fa-solid fa-icons"></i>
+          <h4>${hobby.trim()}</h4>
+        </div>
+      `).join('');
+    }
+
+    function initTimer() {
+      const duration = 45;
+      let remaining = duration;
+      const timerFill = document.getElementById('timerFill');
+      const timerText = document.getElementById('timerText');
+      const timerCard = document.getElementById('timerCard');
+
+      const interval = setInterval(() => {
+        remaining--;
+        const progress = ((duration - remaining) / duration) * 100;
+        timerFill.style.width = `${progress}%`;
+        timerText.textContent = `${remaining}s`;
+
+        if (remaining <= 0) {
+          clearInterval(interval);
+          timerText.textContent = "DONE!";
+          timerCard.classList.add('completed');
+          if (typeof confetti === 'function') {
+            confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+          }
+          playSoundEffect('success');
+        }
+      }, 1000);
+    }
+
+    function init3DCard() {
+      const card = document.getElementById('idCard');
+      if (!card) return;
+
+      card.addEventListener('mousemove', (e) => {
+        const rect = card.getBoundingClientRect();
+        const x = e.clientX - rect.left - rect.width / 2;
+        const y = e.clientY - rect.top - rect.height / 2;
+        card.style.transform = `rotateY(${x / 15}deg) rotateX(${-y / 15}deg)`;
+      });
+
+      card.addEventListener('mouseleave', () => {
+        card.style.transform = 'rotateY(0deg) rotateX(0deg)';
+      });
+    }
+
+    function initTabs() {
+      const tabBtns = document.querySelectorAll('.tab-btn');
+      const tabPanes = document.querySelectorAll('.tab-pane');
+
+      tabBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          playSoundEffect('click');
+          tabBtns.forEach(b => b.classList.remove('active'));
+          tabPanes.forEach(p => p.classList.remove('active'));
+
+          btn.classList.add('active');
+          const targetTab = btn.getAttribute('data-tab');
+          document.getElementById(targetTab).classList.add('active');
+        });
+      });
+
+      document.getElementById('addNoteBtn').addEventListener('click', () => {
+        const noteText = prompt("Enter text for your sticky note:", "New Study Task!");
+        if (noteText) {
+          const container = document.getElementById('stickyContainer');
+          const note = document.createElement('div');
+          note.className = "sticky-note yellow-note";
+          note.innerHTML = `<span class="pin">📌</span><h4>Note</h4><p>${noteText}</p>`;
+          container.appendChild(note);
+          playSoundEffect('click');
+        }
+      });
+    }
+
+    function initCoffeeWidget() {
+      const liquid = document.getElementById('coffeeLiquid');
+      const caffeineVal = document.getElementById('caffeineVal');
+      const sipBtn = document.getElementById('sipBtn');
+      const refillBtn = document.getElementById('refillBtn');
+
+      sipBtn.addEventListener('click', () => {
+        if (studentState.caffeine > 0) {
+          studentState.caffeine = Math.max(0, studentState.caffeine - 20);
+          liquid.style.height = `${studentState.caffeine}%`;
+          caffeineVal.textContent = `${studentState.caffeine}%`;
+          playSoundEffect('click');
+        }
+      });
+
+      refillBtn.addEventListener('click', () => {
+        studentState.caffeine = 100;
+        liquid.style.height = '100%';
+        caffeineVal.textContent = '100%';
+        playSoundEffect('success');
+      });
+    }
+
+    function initTerminal() {
+      const input = document.getElementById('termInput');
+      const output = document.getElementById('termOutput');
+
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          const cmd = input.value.trim().toLowerCase();
+          input.value = '';
+          
+          const cmdLine = document.createElement('p');
+          cmdLine.className = 'term-line';
+          cmdLine.innerHTML = `<span class="prompt">$</span> ${cmd}`;
+          output.appendChild(cmdLine);
+
+          const response = document.createElement('p');
+          response.className = 'term-line text-dim';
+
+          switch(cmd) {
+            case 'help':
+              response.innerHTML = "Available commands: <span class='text-glow'>skills</span>, <span class='text-glow'>hobbies</span>, <span class='text-glow'>clear</span>, <span class='text-glow'>matrix</span>, <span class='text-glow'>whoami</span>";
+              break;
+            case 'skills':
+              response.textContent = `Skills: ${studentState.skills.join(', ')}`;
+              break;
+            case 'hobbies':
+              response.textContent = `Hobbies: ${studentState.hobbies.join(', ')}`;
+              break;
+            case 'whoami':
+              response.textContent = `${studentState.name} | ${studentState.degree} (${studentState.year})`;
+              break;
+            case 'matrix':
+              response.innerHTML = "<span style='color: #10b981;'>Wake up, Neo... The Matrix has you.</span>";
+              break;
+            case 'clear':
+              output.innerHTML = '';
+              return;
+            default:
+              response.textContent = `Command not recognized: '${cmd}'. Type 'help' for commands.`;
+          }
+
+          output.appendChild(response);
+          output.scrollTop = output.scrollHeight;
+          playSoundEffect('click');
+        }
+      });
+    }
+
+    let gameActive = false;
+    let clicksLeft = 5;
+    let startTime = 0;
+    let clickTimes = [];
+
+    function initFittsGame() {
+      const startBtn = document.getElementById('startGameBtn');
+      const target = document.getElementById('gameTarget');
+      const arena = document.getElementById('gameArena');
+      const instructions = document.getElementById('gameInstructions');
+
+      startBtn.addEventListener('click', () => {
+        clicksLeft = 5;
+        clickTimes = [];
+        gameActive = true;
+        instructions.style.display = 'none';
+        target.style.display = 'flex';
+        document.getElementById('statClicks').textContent = clicksLeft;
+        document.getElementById('statTime').textContent = '0.00s';
+        document.getElementById('statScore').textContent = '--';
+        moveTarget();
+        startTime = performance.now();
+        playSoundEffect('click');
+      });
+
+      target.addEventListener('click', () => {
+        if (!gameActive) return;
+
+        const now = performance.now();
+        clickTimes.push((now - startTime) / 1000);
+        startTime = now;
+
+        clicksLeft--;
+        document.getElementById('statClicks').textContent = clicksLeft;
+        playSoundEffect('hit');
+
+        if (clicksLeft <= 0) {
+          gameActive = false;
+          target.style.display = 'none';
+          instructions.style.display = 'flex';
+          instructions.innerHTML = `<i class="fa-solid fa-trophy fa-2x" style="color: var(--accent-yellow)"></i><p>Test Complete! Check your reflex score below.</p>`;
+
+          const avgTime = (clickTimes.reduce((a, b) => a + b, 0) / clickTimes.length).toFixed(2);
+          document.getElementById('statTime').textContent = `${avgTime}s`;
+          document.getElementById('statScore').textContent = avgTime < 0.6 ? 'A+ (Fast!)' : 'B (Good)';
+          playSoundEffect('success');
+        } else {
+          moveTarget();
+        }
+      });
+
+      function moveTarget() {
+        const maxX = arena.clientWidth - 50;
+        const maxY = arena.clientHeight - 50;
+        const randomX = Math.max(10, Math.floor(Math.random() * maxX));
+        const randomY = Math.max(10, Math.floor(Math.random() * maxY));
+
+        target.style.left = `${randomX}px`;
+        target.style.top = `${randomY}px`;
+      }
+    }
+
+    function initCustomizer() {
+      const drawer = document.getElementById('editorDrawer');
+      const backdrop = document.getElementById('backdrop');
+      const openBtn = document.getElementById('openEditorBtn');
+      const closeBtn = document.getElementById('closeEditorBtn');
+      const saveBtn = document.getElementById('saveCustomizerBtn');
+
+      function openDrawer() {
+        drawer.classList.add('open');
+        backdrop.classList.add('visible');
+      }
+
+      function closeDrawer() {
+        drawer.classList.remove('open');
+        backdrop.classList.remove('visible');
+      }
+
+      openBtn.addEventListener('click', openDrawer);
+      closeBtn.addEventListener('click', closeDrawer);
+      backdrop.addEventListener('click', closeDrawer);
+
+      saveBtn.addEventListener('click', () => {
+        studentState.name = document.getElementById('editName').value;
+        studentState.degree = document.getElementById('editDegree').value;
+        studentState.studentId = document.getElementById('editId').value;
+        studentState.year = document.getElementById('editYear').value;
+        studentState.avatar = document.getElementById('editAvatar').value;
+        studentState.bio = document.getElementById('editBio').value;
+        studentState.skills = document.getElementById('editSkills').value.split(',');
+        studentState.hobbies = document.getElementById('editHobbies').value.split(',');
+
+        renderProfile();
+        closeDrawer();
+        playSoundEffect('success');
+      });
+    }
+
+    let lofiPlaying = false;
+    let lofiInterval = null;
+
+    function initLofiSynth() {
+      const lofiBtn = document.getElementById('lofiToggleBtn');
+      const lofiStatus = document.getElementById('lofiStatus');
+
+      lofiBtn.addEventListener('click', () => {
+        lofiPlaying = !lofiPlaying;
+        if (lofiPlaying) {
+          lofiStatus.textContent = 'Pause Lofi Beats';
+          startLofiChords();
+        } else {
+          lofiStatus.textContent = 'Play Lofi Beats';
+          clearInterval(lofiInterval);
+        }
+      });
+    }
+
+    function startLofiChords() {
+      const chordNotes = [261.63, 329.63, 392.00, 493.88];
+      let index = 0;
+
+      lofiInterval = setInterval(() => {
+        if (!lofiPlaying) return;
+        try {
+          if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+
+          osc.type = 'triangle';
+          osc.frequency.value = chordNotes[index % chordNotes.length];
+          gain.gain.setValueAtTime(0.03, audioCtx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 1.8);
+
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+
+          osc.start();
+          osc.stop(audioCtx.currentTime + 1.8);
+
+          index++;
+        } catch (e) {}
+      }, 1500);
+    }
+
+    function initThemeToggle() {
+      const toggleBtn = document.getElementById('themeToggleBtn');
+      toggleBtn.addEventListener('click', () => {
+        document.body.classList.toggle('light-mode');
+        document.body.classList.toggle('dark-mode');
+        const isLight = document.body.classList.contains('light-mode');
+        toggleBtn.innerHTML = isLight ? '<i class="fa-solid fa-sun"></i>' : '<i class="fa-solid fa-moon"></i>';
+        playSoundEffect('click');
+      });
+    }
+  </script>
+</body>
+</html>
